@@ -1,17 +1,24 @@
 import { NextResponse } from 'next/server';
-import Anthropic from '@anthropic-ai/sdk';
+import { openai } from '@ai-sdk/openai';
+import { generateObject } from 'ai';
+import { z } from 'zod';
 import { createClient } from '@supabase/supabase-js';
 import { v4 as uuidv4 } from 'uuid';
-import { 
-  createSpreadsheet, 
+import {
+  createSpreadsheet,
   updateSpreadsheetWithExpenses,
   getSpreadsheetData,
-  parseImportedExpenses
+  parseImportedExpenses,
+  appendExpenseToSheet
 } from '@/lib/googleSheets';
-import { getAuthUrl, getTokensFromCode } from '@/lib/googleAuth';
+import { getAuthUrl, getTokensFromCode, refreshAccessToken } from '@/lib/googleAuth';
 
-const anthropic = new Anthropic({
-  apiKey: process.env.ANTHROPIC_API_KEY,
+// Define the expense schema for structured output
+const expenseSchema = z.object({
+  amount: z.number().describe('Amount in INR (Indian Rupees)'),
+  category: z.enum(['Food', 'Transport', 'Entertainment', 'Shopping', 'Bills', 'Health', 'Other'])
+    .describe('Expense category based on the context'),
+  description: z.string().describe('Short description with first letter capitalized')
 });
 
 const supabase = createClient(
@@ -21,6 +28,63 @@ const supabase = createClient(
 
 // Mock user ID for MVP (will be replaced with real auth later)
 const MOCK_USER_ID = '00000000-0000-0000-0000-000000000001';
+
+// Helper function to sync expense to Google Sheets
+async function syncExpenseToGoogleSheets(expense) {
+  try {
+    // Get user's Google tokens
+    const { data: user, error: userError } = await supabase
+      .from('users')
+      .select('google_access_token, google_refresh_token, google_sheet_id, name')
+      .eq('id', MOCK_USER_ID)
+      .single();
+
+    // Skip if not connected or no sheet
+    if (userError || !user.google_access_token) {
+      console.log('Google Sheets not connected, skipping sync');
+      return;
+    }
+
+    let accessToken = user.google_access_token;
+    let spreadsheetId = user.google_sheet_id;
+
+    // Try to refresh token if needed
+    if (user.google_refresh_token) {
+      try {
+        const newCredentials = await refreshAccessToken(user.google_refresh_token);
+        accessToken = newCredentials.access_token;
+
+        // Update token in database
+        await supabase
+          .from('users')
+          .update({ google_access_token: accessToken })
+          .eq('id', MOCK_USER_ID);
+      } catch (refreshError) {
+        console.log('Token refresh not needed or failed:', refreshError.message);
+      }
+    }
+
+    // Create sheet if doesn't exist
+    if (!spreadsheetId) {
+      const title = `My Expenses - ${user.name || 'User'}`;
+      const sheet = await createSpreadsheet(accessToken, title);
+      spreadsheetId = sheet.spreadsheetId;
+
+      // Save sheet ID
+      await supabase
+        .from('users')
+        .update({ google_sheet_id: spreadsheetId })
+        .eq('id', MOCK_USER_ID);
+    }
+
+    // Append expense to sheet
+    await appendExpenseToSheet(accessToken, spreadsheetId, expense);
+    console.log('Successfully synced expense to Google Sheets:', expense.id);
+  } catch (error) {
+    console.error('Error syncing to Google Sheets:', error);
+    throw error;
+  }
+}
 
 export async function GET(request) {
   const url = new URL(request.url);
@@ -158,71 +222,39 @@ export async function POST(request) {
         );
       }
 
-      // Call Claude API to parse the expense
-      const message = await anthropic.messages.create({
-        model: 'claude-3-5-sonnet-20241022',
-        max_tokens: 1024,
-        messages: [
-          {
-            role: 'user',
-            content: `You are an expense parser for Indian users. Extract amount (in INR), category, and description from natural language input.
+      try {
+        // Use Vercel AI SDK with structured output
+        const { object } = await generateObject({
+          model: openai('gpt-4o-mini'),
+          schema: expenseSchema,
+          prompt: `Parse this expense from an Indian user: "${text}"
 
-Categories: Food, Transport, Entertainment, Shopping, Bills, Health, Other
+Context & Examples:
+- "gym 150" → {amount: 150, category: "Health", description: "Gym"}
+- "coffee 80" → {amount: 80, category: "Food", description: "Coffee"}
+- "lunch 250" → {amount: 250, category: "Food", description: "Lunch"}
+- "uber to office 180" → {amount: 180, category: "Transport", description: "Uber ride"}
+- "movie tickets 600" → {amount: 600, category: "Entertainment", description: "Movie tickets"}
+- "paid electricity bill 1500" → {amount: 1500, category: "Bills", description: "Electricity bill"}
+- "bought headphones 2999" → {amount: 2999, category: "Shopping", "description": "Headphones"}
 
 Rules:
 - Be flexible with casual language and typos
-- If category unclear, default to most likely option
-- For transport, recognize: uber, ola, auto, metro, bus, petrol
-- For food, recognize: lunch, dinner, breakfast, coffee, zomato, swiggy, chai, tea
+- For transport: uber, ola, auto, metro, bus, petrol
+- For food: lunch, dinner, breakfast, coffee, zomato, swiggy, chai, tea
+- For health: gym, medicine, doctor, hospital
 - Extract brand names when mentioned
+- If category is unclear, choose the most likely option`,
+        });
 
-Return ONLY valid JSON in this exact format:
-{
-  "amount": number,
-  "category": "Food|Transport|Entertainment|Shopping|Bills|Health|Other",
-  "description": "string (capitalize first letter)"
-}
-
-Examples:
-Input: 'lunch 250' → {"amount": 250, "category": "Food", "description": "Lunch"}
-Input: 'ola to office 180' → {"amount": 180, "category": "Transport", "description": "Ola ride"}
-Input: 'paid electricity bill 1500' → {"amount": 1500, "category": "Bills", "description": "Electricity bill"}
-Input: 'bought headphones 2999' → {"amount": 2999, "category": "Shopping", "description": "Headphones"}
-
-Now parse this:
-Input: '${text}'`,
-          },
-        ],
-      });
-
-      const content = message.content[0].text;
-      let parsed;
-      
-      try {
-        // Extract JSON from response (handle cases where AI adds extra text)
-        const jsonMatch = content.match(/\{[^}]+\}/);
-        if (jsonMatch) {
-          parsed = JSON.parse(jsonMatch[0]);
-        } else {
-          parsed = JSON.parse(content);
-        }
-      } catch (parseError) {
-        console.error('Failed to parse AI response:', content);
+        return NextResponse.json(object);
+      } catch (error) {
+        console.error('AI parsing error:', error);
         return NextResponse.json(
-          { error: 'Could not understand the expense format. Please try again.' },
-          { status: 400 }
+          { error: error.message || 'Could not understand the expense format. Please try again.' },
+          { status: 500 }
         );
       }
-
-      // Validate parsed data
-      if (!parsed.amount || !parsed.category || !parsed.description) {
-        return NextResponse.json(
-          { error: 'Could not extract complete expense information' },
-          { status: 400 }
-        );
-      }
-
-      return NextResponse.json(parsed);
     }
 
     // POST /api/expenses - Create new expense
@@ -258,6 +290,12 @@ Input: '${text}'`,
 
       if (error) throw error;
 
+      // Auto-sync to Google Sheets (non-blocking)
+      syncExpenseToGoogleSheets(data).catch(err => {
+        console.error('Failed to sync expense to Google Sheets:', err);
+        // Don't fail the request if sync fails
+      });
+
       return NextResponse.json({ expense: data }, { status: 201 });
     }
 
@@ -275,14 +313,19 @@ Input: '${text}'`,
       // Exchange code for tokens
       const tokens = await getTokensFromCode(code);
 
-      // Store tokens in user table
+      // Store tokens in user table (upsert to create if doesn't exist)
       const { error } = await supabase
         .from('users')
-        .update({
+        .upsert({
+          id: MOCK_USER_ID,
+          name: 'Demo User',
+          email: 'demo@spendwise.app',
           google_access_token: tokens.access_token,
           google_refresh_token: tokens.refresh_token,
-        })
-        .eq('id', MOCK_USER_ID);
+          updated_at: new Date().toISOString(),
+        }, {
+          onConflict: 'id'
+        });
 
       if (error) throw error;
 
@@ -448,6 +491,83 @@ Input: '${text}'`,
         importedCount,
         skippedCount: expenses.length - importedCount,
         errors: errors.length > 0 ? errors : undefined,
+      });
+    }
+
+    // POST /api/google/create-sheet - Manually create Google Sheet
+    if (path === '/google/create-sheet' || path === '/google/create-sheet/') {
+      // Get user's Google tokens
+      const { data: user, error: userError } = await supabase
+        .from('users')
+        .select('google_access_token, google_refresh_token, google_sheet_id, name')
+        .eq('id', MOCK_USER_ID)
+        .single();
+
+      if (userError || !user.google_access_token) {
+        return NextResponse.json(
+          { error: 'Google account not connected' },
+          { status: 401 }
+        );
+      }
+
+      let accessToken = user.google_access_token;
+
+      // Try to refresh token if needed
+      if (user.google_refresh_token) {
+        try {
+          const newCredentials = await refreshAccessToken(user.google_refresh_token);
+          accessToken = newCredentials.access_token;
+
+          await supabase
+            .from('users')
+            .update({ google_access_token: accessToken })
+            .eq('id', MOCK_USER_ID);
+        } catch (refreshError) {
+          console.log('Token refresh not needed or failed:', refreshError.message);
+        }
+      }
+
+      // Check if sheet already exists
+      if (user.google_sheet_id) {
+        return NextResponse.json({
+          success: true,
+          spreadsheetId: user.google_sheet_id,
+          spreadsheetUrl: `https://docs.google.com/spreadsheets/d/${user.google_sheet_id}`,
+          message: 'Sheet already exists',
+        });
+      }
+
+      // Create new sheet
+      const title = `My Expenses - ${user.name || 'User'}`;
+      const sheet = await createSpreadsheet(accessToken, title);
+      const spreadsheetId = sheet.spreadsheetId;
+
+      // Save sheet ID
+      await supabase
+        .from('users')
+        .update({ google_sheet_id: spreadsheetId })
+        .eq('id', MOCK_USER_ID);
+
+      // Fetch existing expenses and populate the sheet
+      const { data: expenses, error: expError } = await supabase
+        .from('expenses')
+        .select('*')
+        .eq('user_id', MOCK_USER_ID)
+        .order('date', { ascending: false });
+
+      let expenseCount = 0;
+      if (expenses && expenses.length > 0) {
+        // Populate sheet with existing expenses
+        await updateSpreadsheetWithExpenses(accessToken, spreadsheetId, expenses);
+        expenseCount = expenses.length;
+      }
+
+      return NextResponse.json({
+        success: true,
+        spreadsheetId,
+        spreadsheetUrl: `https://docs.google.com/spreadsheets/d/${spreadsheetId}`,
+        message: 'Sheet created successfully',
+        expenseCount,
       });
     }
 

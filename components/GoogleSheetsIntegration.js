@@ -209,18 +209,79 @@ export default function GoogleSheetsIntegration() {
           ) : (
             <FileSpreadsheet className="h-4 w-4" />
           )}
-          Connect Google Sheets
+          Enable Auto-Sync
         </Button>
       </div>
     );
   }
 
+  const handleCreateSheet = async () => {
+    try {
+      setLoading(true);
+      const response = await fetch('/api/google/create-sheet', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to create sheet');
+      }
+
+      setSheetId(data.spreadsheetId);
+
+      const expenseCountMsg = data.expenseCount > 0
+        ? ` with ${data.expenseCount} expense${data.expenseCount !== 1 ? 's' : ''}`
+        : '';
+
+      toast({
+        title: data.message === 'Sheet already exists' ? 'Sheet Found!' : 'Sheet Created!',
+        description: data.message === 'Sheet already exists'
+          ? 'Your expense sheet already exists'
+          : `Your expense tracking sheet has been created${expenseCountMsg}`,
+      });
+
+      // Open the sheet
+      setTimeout(() => {
+        window.open(data.spreadsheetUrl, '_blank');
+      }, 1000);
+    } catch (error) {
+      console.error('Create sheet error:', error);
+      toast({
+        title: 'Error',
+        description: error.message || 'Failed to create sheet',
+        variant: 'destructive',
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <div className="flex flex-wrap items-center gap-2">
       <div className="flex items-center gap-2 text-sm text-green-600 bg-green-50 px-3 py-1 rounded-full">
         <CheckCircle2 className="h-4 w-4" />
-        <span>Google Sheets Connected</span>
+        <span>Auto-Sync Active</span>
       </div>
+
+      {/* Create Sheet Button */}
+      {!sheetId && (
+        <Button
+          onClick={handleCreateSheet}
+          disabled={loading}
+          size="sm"
+          className="flex items-center gap-2"
+          data-testid="create-sheet"
+        >
+          {loading ? (
+            <Loader2 className="h-4 w-4 animate-spin" />
+          ) : (
+            <FileSpreadsheet className="h-4 w-4" />
+          )}
+          Create Sheet
+        </Button>
+      )}
 
       {/* Export Dialog */}
       <Dialog open={exportDialogOpen} onOpenChange={setExportDialogOpen}>
@@ -239,7 +300,7 @@ export default function GoogleSheetsIntegration() {
           <DialogHeader>
             <DialogTitle>Export to Google Sheets</DialogTitle>
             <DialogDescription>
-              Choose which expenses to export to your Google Sheet
+              New expenses auto-sync instantly. Use this to export historical expenses.
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
