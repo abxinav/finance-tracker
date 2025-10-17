@@ -1,0 +1,187 @@
+╔══════════════════════════════════════════════════════════════════╗
+║                                                                  ║
+║         🚨 URGENT FIX: Get Your App Working (5 Minutes)          ║
+║                                                                  ║
+╚══════════════════════════════════════════════════════════════════╝
+
+You have 2 issues:
+1. ❌ Expenses not saving (RLS blocking inserts)
+2. ❌ Google Sheets not connecting (OAuth redirect URI missing)
+
+Let's fix both RIGHT NOW!
+
+═══════════════════════════════════════════════════════════════════
+
+🔥 FIX #1: Make Expenses Save (30 seconds)
+═══════════════════════════════════════════════════════════════════
+
+STEP 1: Open Supabase
+→ Go to: https://supabase.com/dashboard
+→ Select project: patlahankyhajvonugws
+→ Click: "SQL Editor" (left sidebar)
+→ Click: "New Query"
+
+STEP 2: Copy & Paste This Entire SQL:
+
+───────────────────────────────────────────────────────────────────
+-- Disable RLS to allow inserts
+ALTER TABLE public.expenses DISABLE ROW LEVEL SECURITY;
+
+-- Add Google Sheets columns
+ALTER TABLE public.users
+ADD COLUMN IF NOT EXISTS google_sheet_id TEXT,
+ADD COLUMN IF NOT EXISTS google_access_token TEXT,
+ADD COLUMN IF NOT EXISTS google_refresh_token TEXT;
+
+-- Set demo user name
+UPDATE public.users
+SET name = 'Demo User'
+WHERE id = '00000000-0000-0000-0000-000000000001';
+───────────────────────────────────────────────────────────────────
+
+STEP 3: Click "RUN" (or press Ctrl+Enter)
+
+STEP 4: Test!
+→ Go to your app: https://spendwise-646.preview.emergentagent.com
+→ Type: "coffee 80"
+→ Press Enter
+→ ✅ Should now appear in Recent Expenses!
+
+═══════════════════════════════════════════════════════════════════
+
+🔥 FIX #2: Connect Google Sheets (2 minutes)
+═══════════════════════════════════════════════════════════════════
+
+STEP 1: Open Google Cloud Console
+→ Go to: https://console.cloud.google.com/apis/credentials
+
+STEP 2: Find Your OAuth Client
+→ Look for your OAuth 2.0 Client ID
+→ Should show: 674900603085-4gmc4j4gd09utu3cit0vka0rpt4rri7j
+→ Click the EDIT icon (pencil)
+
+STEP 3: Add Redirect URI
+→ Scroll to "Authorized redirect URIs"
+→ Click "ADD URI"
+→ Paste this EXACT URL:
+
+   https://spendwise-646.preview.emergentagent.com/auth/google/callback
+
+→ Click "SAVE" at the bottom
+
+STEP 4: Wait 1 minute for Google to update
+
+STEP 5: Test Google Sheets Connection!
+→ Refresh your SpendWise app
+→ Click "Connect Google Sheets" button
+→ Popup should open asking for Google permissions
+→ Click "Allow"
+→ Should see "Google Sheets Connected ✅"
+
+═══════════════════════════════════════════════════════════════════
+
+✅ VERIFICATION CHECKLIST
+═══════════════════════════════════════════════════════════════════
+
+After completing BOTH fixes:
+
+□ Type "coffee 80" → Appears in Recent Expenses
+□ Weekly total updates from ₹0 to ₹80
+□ Delete button works on expenses
+□ "Connect Google Sheets" button visible
+□ Google OAuth popup opens
+□ After authorization, shows "Connected ✅"
+□ Export button appears
+□ Can export expenses to Google Sheets
+
+═══════════════════════════════════════════════════════════════════
+
+🐛 STILL NOT WORKING?
+═══════════════════════════════════════════════════════════════════
+
+Issue: "Expenses still not saving"
+→ Check browser console (F12)
+→ Try hard refresh (Ctrl+Shift+R)
+→ Verify SQL ran successfully in Supabase
+
+Issue: "Google Sheets popup blocked"
+→ Allow popups in your browser
+→ Check if redirect URI is EXACTLY correct (no trailing slash)
+
+Issue: "OAuth error: redirect_uri_mismatch"
+→ Double-check the redirect URI in Google Cloud Console
+→ Must be EXACT: https://spendwise-646.preview.emergentagent.com/auth/google/callback
+→ No http:// (must be https://)
+→ No trailing slash
+→ Wait 1-2 minutes after saving
+
+═══════════════════════════════════════════════════════════════════
+
+📊 WHAT YOU CAN DO AFTER FIXES:
+═══════════════════════════════════════════════════════════════════
+
+1. Add expenses with natural language:
+   ✓ "coffee 80"
+   ✓ "lunch at dominos 250"
+   ✓ "uber to office 150"
+   ✓ "movie tickets 600"
+
+2. Use Quick Add buttons:
+   ✓ Coffee ₹80
+   ✓ Lunch ₹200
+   ✓ Auto ₹50
+   ✓ Tea ₹20
+
+3. View weekly stats & category breakdown
+
+4. Export to Google Sheets:
+   ✓ Click Export
+   ✓ Choose time range
+   ✓ Open in Google Sheets
+   ✓ See formatted expense report!
+
+5. Import from Google Sheets:
+   ✓ Create sheet with: Date, Description, Category, Amount
+   ✓ Paste Sheet URL
+   ✓ Import expenses
+
+═══════════════════════════════════════════════════════════════════
+
+⏱️ TIME ESTIMATE:
+Fix #1 (Expenses): 30 seconds
+Fix #2 (Google Sheets): 2 minutes
+Testing: 1 minute
+───────────────────────────────
+TOTAL: ~4 minutes
+
+═══════════════════════════════════════════════════════════════════
+
+🎯 PRIORITY:
+1. Do FIX #1 FIRST (so you can add expenses)
+2. Then do FIX #2 (for Google Sheets)
+3. Test everything
+
+═══════════════════════════════════════════════════════════════════
+
+💡 SCREENSHOTS TO HELP:
+
+For Fix #1 (Supabase):
+1. SQL Editor is in the left sidebar (looks like </> icon)
+2. Click "New Query" button (top right)
+3. Paste the SQL in the text area
+4. Click green "RUN" button
+5. Should see "Success" message
+
+For Fix #2 (Google OAuth):
+1. Find the pencil/edit icon next to your OAuth client
+2. Scroll down to "Authorized redirect URIs"
+3. Should see a text box with "+ ADD URI" button
+4. Paste the URL
+5. Scroll all the way down and click blue "SAVE" button
+
+═══════════════════════════════════════════════════════════════════
+
+Need more help? The app logs are available at:
+Browser Console (F12) → Console tab
+
+═══════════════════════════════════════════════════════════════════

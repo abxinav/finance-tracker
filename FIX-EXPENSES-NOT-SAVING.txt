@@ -1,0 +1,105 @@
+╔══════════════════════════════════════════════════════════════════╗
+║                                                                  ║
+║           🔧 FIX: Expenses Not Saving (30 seconds)               ║
+║                                                                  ║
+╚══════════════════════════════════════════════════════════════════╝
+
+PROBLEM: Row Level Security is blocking expense inserts
+
+SOLUTION: Update RLS policies to allow the demo user
+
+═══════════════════════════════════════════════════════════════════
+
+QUICK FIX (Choose ONE option):
+
+─────────────────────────────────────────────────────────────────
+
+OPTION 1: Run Fix Script (RECOMMENDED - 30 seconds)
+─────────────────────────────────────────────────────────────────
+
+1. Open Supabase SQL Editor
+   → https://supabase.com/dashboard → Your Project → SQL Editor
+
+2. Copy & Paste the fix script:
+   → Open file: /app/fix-rls-policies.sql
+   → Copy ALL content
+   → Paste into SQL Editor
+   → Click RUN
+
+3. Test the app:
+   → Refresh: https://spendwise-646.preview.emergentagent.com
+   → Type: "coffee 80"
+   → Press Enter
+   → Should save successfully! ✅
+
+─────────────────────────────────────────────────────────────────
+
+OPTION 2: Disable RLS Temporarily (FASTEST - 10 seconds)
+─────────────────────────────────────────────────────────────────
+
+1. Open Supabase SQL Editor
+
+2. Run this single command:
+   
+   ALTER TABLE public.expenses DISABLE ROW LEVEL SECURITY;
+
+3. Test the app - expenses should save now!
+
+NOTE: This disables security. For production, use Option 1 instead.
+
+─────────────────────────────────────────────────────────────────
+
+OPTION 3: Re-run Full Setup (2 minutes)
+─────────────────────────────────────────────────────────────────
+
+If the above doesn't work:
+
+1. Drop existing tables:
+   
+   DROP TABLE IF EXISTS public.expenses CASCADE;
+   DROP TABLE IF EXISTS public.user_preferences CASCADE;
+   DROP TABLE IF EXISTS public.users CASCADE;
+
+2. Run the UPDATED setup script:
+   → Open: /app/supabase-setup.sql
+   → Copy ALL content
+   → Paste and RUN in SQL Editor
+
+═══════════════════════════════════════════════════════════════════
+
+VERIFY IT WORKS:
+
+After running the fix:
+
+1. Refresh the app
+2. Type: "coffee 80"
+3. Press Enter
+4. You should see:
+   ✅ Loading spinner
+   ✅ Green checkmark
+   ✅ Expense appears in the list below
+   ✅ Weekly total updates
+
+═══════════════════════════════════════════════════════════════════
+
+WHAT WAS THE ISSUE?
+
+Row Level Security (RLS) was blocking inserts because:
+- The policies required `auth.uid()` (authenticated user)
+- We're using a mock user ID for the MVP
+- The anon key doesn't have auth context
+
+The fix allows the demo user ID to bypass this requirement.
+
+═══════════════════════════════════════════════════════════════════
+
+STILL NOT WORKING?
+
+Check the browser console (F12):
+1. Open Developer Tools
+2. Go to Console tab
+3. Try adding an expense
+4. Look for error messages
+5. Share the error with me
+
+═══════════════════════════════════════════════════════════════════

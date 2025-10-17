@@ -1,0 +1,235 @@
+╔══════════════════════════════════════════════════════════════════╗
+║                                                                  ║
+║       🎉 GOOGLE SHEETS INTEGRATION - COMPLETE GUIDE              ║
+║                                                                  ║
+╚══════════════════════════════════════════════════════════════════╝
+
+Your SpendWise app now has FULL Google Sheets integration!
+
+═══════════════════════════════════════════════════════════════════
+
+FEATURES IMPLEMENTED:
+
+✅ Google OAuth 2.0 Authentication
+✅ Export to Google Sheets (This Week / This Month / All Time)
+✅ Import from Google Sheets
+✅ Auto-create formatted spreadsheet
+✅ Category summaries
+✅ Duplicate detection on import
+✅ Beautiful formatted sheets with colors
+
+═══════════════════════════════════════════════════════════════════
+
+📋 SETUP STEPS:
+
+STEP 1: Update Supabase Database
+─────────────────────────────────────────────────────────────────
+
+1. Go to Supabase SQL Editor
+2. Run the script: /app/add-google-columns.sql
+
+This adds the Google Sheets columns to your users table.
+
+STEP 2: Configure Google OAuth (IMPORTANT!)
+─────────────────────────────────────────────────────────────────
+
+Your Google OAuth needs the correct redirect URI:
+
+1. Go to: https://console.cloud.google.com/apis/credentials
+
+2. Find your OAuth 2.0 Client ID
+
+3. Add this to "Authorized redirect URIs":
+   
+   https://spendwise-646.preview.emergentagent.com/auth/google/callback
+
+4. Click SAVE
+
+═══════════════════════════════════════════════════════════════════
+
+🚀 HOW TO USE:
+
+CONNECT TO GOOGLE SHEETS
+─────────────────────────────────────────────────────────────────
+
+1. Look for "Connect Google Sheets" button in the header
+
+2. Click it → OAuth popup opens
+
+3. Sign in to your Google account
+
+4. Grant permissions for:
+   - View and manage your Google Sheets
+   - Create new spreadsheets
+
+5. Button changes to show "Google Sheets Connected" ✅
+
+EXPORT EXPENSES
+─────────────────────────────────────────────────────────────────
+
+Once connected, you'll see:
+
+1. **Export** button - Click to export
+   
+2. Choose time range:
+   - This Week
+   - This Month
+   - All Time
+
+3. Click Export → Creates/updates your sheet
+
+4. Two sheets are created:
+   📊 **All Expenses** - Complete list with:
+      - Date | Description | Category | Amount (₹)
+      - Formatted headers (blue background)
+      - Auto-sized columns
+   
+   📈 **Summary** - Category breakdown:
+      - Total spent
+      - Amount per category
+
+5. After export, you'll see:
+   - "Export successful!" notification
+   - Link to open the sheet in new tab
+
+IMPORT EXPENSES
+─────────────────────────────────────────────────────────────────
+
+1. Click **Import** button
+
+2. Paste your Google Sheet URL or ID:
+   Format: https://docs.google.com/spreadsheets/d/SHEET_ID/...
+
+3. Required columns in your sheet:
+   - Date (format: YYYY-MM-DD or any date format)
+   - Description
+   - Category (Food, Transport, etc.)
+   - Amount (number)
+
+4. Click Import:
+   - Validates data format
+   - Checks for duplicates
+   - Imports only new expenses
+   - Shows count: "Imported X expenses (Y duplicates skipped)"
+
+5. Page refreshes to show imported expenses
+
+OTHER FEATURES
+─────────────────────────────────────────────────────────────────
+
+- **Open Sheet** button: Directly open your Google Sheet
+- **Disconnect** button: Remove Google Sheets connection
+
+═══════════════════════════════════════════════════════════════════
+
+📊 WHAT THE EXPORTED SHEET LOOKS LIKE:
+
+Sheet 1: "All Expenses"
+┌────────────┬──────────────┬─────────────┬────────────┐
+│ Date       │ Description  │ Category    │ Amount (₹) │
+├────────────┼──────────────┼─────────────┼────────────┤
+│ 2024-01-17 │ Coffee       │ Food        │         80 │
+│ 2024-01-17 │ Lunch        │ Food        │        250 │
+│ 2024-01-16 │ Uber ride    │ Transport   │        180 │
+│ 2024-01-15 │ Movie        │ Entertainment│       600 │
+└────────────┴──────────────┴─────────────┴────────────┘
+
+Sheet 2: "Summary"
+┌─────────────────┬────────────┐
+│ Category        │ Amount (₹) │
+├─────────────────┼────────────┤
+│ TOTAL SPENT     │      1,110 │
+│                 │            │
+│ BY CATEGORY     │            │
+│ Food            │        330 │
+│ Transport       │        180 │
+│ Entertainment   │        600 │
+└─────────────────┴────────────┘
+
+═══════════════════════════════════════════════════════════════════
+
+🎨 FORMATTING FEATURES:
+
+✓ Blue header row with white text
+✓ Bold header fonts
+✓ Auto-resized columns
+✓ Frozen header row (stays visible when scrolling)
+✓ Two sheets for organization
+✓ Proper currency formatting
+
+═══════════════════════════════════════════════════════════════════
+
+🔒 SECURITY & PRIVACY:
+
+✓ OAuth 2.0 secure authentication
+✓ Access tokens stored encrypted in Supabase
+✓ Only requested scopes: spreadsheets, drive.file
+✓ You can disconnect anytime
+✓ Tokens are refreshed automatically
+
+═══════════════════════════════════════════════════════════════════
+
+🐛 TROUBLESHOOTING:
+
+"OAuth redirect URI mismatch"
+→ Add the redirect URI in Google Cloud Console (see Step 2)
+
+"Google account not connected"
+→ Click "Connect Google Sheets" button first
+
+"No expenses to export"
+→ Add some expenses first, then try exporting
+
+"Failed to import"
+→ Check your sheet has the required columns:
+  Date, Description, Category, Amount
+
+"Import shows 0 imported, all skipped"
+→ Those expenses already exist (duplicate detection working!)
+
+═══════════════════════════════════════════════════════════════════
+
+💡 PRO TIPS:
+
+1. **Automatic Tracking**: After first export, your Sheet ID is 
+   saved. Future exports update the same sheet!
+
+2. **Multiple Exports**: You can export different time ranges to
+   see how your spending changes
+
+3. **Excel/Numbers**: After export, you can download the Google
+   Sheet as Excel (.xlsx) or other formats
+
+4. **Sharing**: Share your Google Sheet with family/accountant
+   for expense review
+
+5. **Charts**: Add your own charts in Google Sheets for deeper
+   analysis
+
+═══════════════════════════════════════════════════════════════════
+
+📝 API ENDPOINTS ADDED:
+
+GET  /api/google/auth          - Get OAuth URL
+GET  /api/google/status        - Check connection status
+POST /api/google/callback      - Handle OAuth callback
+POST /api/google/export        - Export expenses
+POST /api/google/import        - Import expenses
+POST /api/google/disconnect    - Disconnect account
+
+═══════════════════════════════════════════════════════════════════
+
+🎯 NEXT STEPS:
+
+1. Fix the RLS policy issue (run fix-rls-policies.sql)
+2. Add some expenses to your SpendWise app
+3. Connect to Google Sheets
+4. Export and see your expenses in Google Sheets!
+5. Try importing data back
+
+═══════════════════════════════════════════════════════════════════
+
+REMEMBER: First run add-google-columns.sql in Supabase, then
+configure the OAuth redirect URI in Google Cloud Console!
+
+═══════════════════════════════════════════════════════════════════

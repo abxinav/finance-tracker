@@ -1,0 +1,185 @@
+╔══════════════════════════════════════════════════════════════════╗
+║                                                                  ║
+║   🔧 FIX "accounts.google.com refused to connect" (Step by Step) ║
+║                                                                  ║
+╚══════════════════════════════════════════════════════════════════╝
+
+This error means Google's OAuth consent screen has configuration issues.
+
+═══════════════════════════════════════════════════════════════════
+
+COMPLETE CHECKLIST - Follow Every Step:
+═══════════════════════════════════════════════════════════════════
+
+□ STEP 1: Enable APIs
+───────────────────────────────────────────────────────────────────
+Go to: https://console.cloud.google.com/apis/library
+
+Search and ENABLE (click the blue ENABLE button):
+✓ Google Sheets API
+✓ Google Drive API
+
+Wait 2-3 minutes after enabling.
+
+
+□ STEP 2: OAuth Consent Screen - CRITICAL!
+───────────────────────────────────────────────────────────────────
+Go to: https://console.cloud.google.com/apis/credentials/consent
+
+A. User Type:
+   - Select: "External" (if available)
+   - Or "Internal" (if you have Google Workspace)
+   - Click: CREATE
+
+B. App Information:
+   - App name: SpendWise
+   - User support email: YOUR_EMAIL@gmail.com
+   - App logo: (skip)
+   - App domain: (skip)
+   - Developer contact: YOUR_EMAIL@gmail.com
+   - Click: SAVE AND CONTINUE
+
+C. Scopes:
+   - Click: ADD OR REMOVE SCOPES
+   - Search for: "spreadsheets"
+   - Check: ✓ .../auth/spreadsheets
+   - Search for: "drive"
+   - Check: ✓ .../auth/drive.file
+   - Click: UPDATE
+   - Click: SAVE AND CONTINUE
+
+D. Test Users (IMPORTANT!):
+   - Click: ADD USERS
+   - Enter YOUR email address (the one you'll use to connect)
+   - Click: ADD
+   - Click: SAVE AND CONTINUE
+
+E. Summary:
+   - Review everything
+   - Click: BACK TO DASHBOARD
+
+
+□ STEP 3: Update OAuth Credentials
+───────────────────────────────────────────────────────────────────
+Go to: https://console.cloud.google.com/apis/credentials
+
+Find: OAuth 2.0 Client IDs
+Client: 674900603085-4gmc4j4gd09utu3cit0vka0rpt4rri7j
+
+Click: Edit (pencil icon)
+
+A. Authorized JavaScript origins:
+   - Click: ADD URI
+   - Enter: https://spendwise-646.preview.emergentagent.com
+   - (No trailing slash!)
+
+B. Authorized redirect URIs:
+   - Click: ADD URI
+   - Enter: https://spendwise-646.preview.emergentagent.com/auth/google/callback
+   - (Check spelling carefully!)
+
+Click: SAVE
+
+
+□ STEP 4: Verify OAuth Consent Screen Status
+───────────────────────────────────────────────────────────────────
+Go back to: https://console.cloud.google.com/apis/credentials/consent
+
+Check:
+✓ Publishing status: "Testing"
+✓ Test users: YOUR_EMAIL listed
+✓ Scopes: 2 scopes added
+
+
+□ STEP 5: Wait & Clear Cache
+───────────────────────────────────────────────────────────────────
+- Wait 2-3 minutes for Google to propagate changes
+- Clear browser cache completely
+- Or use Incognito/Private browsing mode
+
+
+□ STEP 6: Test Connection
+───────────────────────────────────────────────────────────────────
+1. Go to: https://spendwise-646.preview.emergentagent.com
+2. Hard refresh: Ctrl+Shift+R (or Cmd+Shift+R)
+3. Click: "Connect Google Sheets"
+4. Should redirect to Google authorization page
+
+═══════════════════════════════════════════════════════════════════
+
+COMMON ISSUES & FIXES:
+═══════════════════════════════════════════════════════════════════
+
+Issue: "refused to connect"
+→ OAuth consent screen not configured
+→ Test users not added
+→ App still in draft mode
+
+Issue: Still seeing errors
+→ Try incognito/private mode
+→ Try different browser
+→ Clear cookies for accounts.google.com
+
+Issue: "redirect_uri_mismatch"
+→ Redirect URI doesn't match exactly
+→ Check for typos, trailing slashes, http vs https
+
+═══════════════════════════════════════════════════════════════════
+
+ALTERNATIVE: Test with OAuth Playground
+═══════════════════════════════════════════════════════════════════
+
+If still not working, test your OAuth setup:
+1. Go to: https://developers.google.com/oauthplayground/
+2. Click gear icon (top right)
+3. Check "Use your own OAuth credentials"
+4. Enter your Client ID and Secret
+5. Select scopes: spreadsheets, drive.file
+6. Click "Authorize APIs"
+7. If this works, your OAuth is configured correctly
+
+═══════════════════════════════════════════════════════════════════
+
+COPY-PASTE VALUES:
+═══════════════════════════════════════════════════════════════════
+
+Client ID:
+674900603085-4gmc4j4gd09utu3cit0vka0rpt4rri7j.apps.googleusercontent.com
+
+Authorized JavaScript origin:
+https://spendwise-646.preview.emergentagent.com
+
+Authorized redirect URI:
+https://spendwise-646.preview.emergentagent.com/auth/google/callback
+
+Scopes to add:
+https://www.googleapis.com/auth/spreadsheets
+https://www.googleapis.com/auth/drive.file
+
+═══════════════════════════════════════════════════════════════════
+
+CRITICAL POINTS:
+═══════════════════════════════════════════════════════════════════
+
+⚠️ You MUST add your email as a test user
+⚠️ Publishing status must be "Testing" (not "In production")
+⚠️ Both APIs must be enabled
+⚠️ Scopes must be added
+⚠️ Redirect URI must match EXACTLY
+⚠️ Wait 2-3 minutes after changes
+
+═══════════════════════════════════════════════════════════════════
+
+SCREENSHOTS TO VERIFY:
+═══════════════════════════════════════════════════════════════════
+
+1. OAuth Consent Screen should show:
+   - Status: Testing
+   - Test users: 1 user (your email)
+   - Scopes: 2 scopes
+
+2. Credentials should show:
+   - Authorized origins: 1 URI
+   - Authorized redirects: 1 URI
+
+═══════════════════════════════════════════════════════════════════

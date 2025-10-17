@@ -1,0 +1,51 @@
+═══════════════════════════════════════════════════════════════════
+     QUICK CHECKLIST: Fix Google OAuth "Refused to Connect"
+═══════════════════════════════════════════════════════════════════
+
+The error means OAuth consent screen needs proper setup.
+
+✓ CHECKLIST (Do all 6 steps):
+───────────────────────────────────────────────────────────────────
+
+□ 1. Enable APIs:
+     - Google Sheets API ✓
+     - Google Drive API ✓
+     URL: https://console.cloud.google.com/apis/library
+
+□ 2. OAuth Consent Screen → External → Configure:
+     - App name: SpendWise
+     - Support email: YOUR_EMAIL
+     - Developer email: YOUR_EMAIL
+     URL: https://console.cloud.google.com/apis/credentials/consent
+
+□ 3. Add Scopes:
+     - .../auth/spreadsheets
+     - .../auth/drive.file
+
+□ 4. Add Test User:
+     - YOUR_EMAIL (the one you'll use to connect!)
+
+□ 5. Update Credentials:
+     JavaScript origin: https://spendwise-646.preview.emergentagent.com
+     Redirect URI: https://spendwise-646.preview.emergentagent.com/auth/google/callback
+     URL: https://console.cloud.google.com/apis/credentials
+
+□ 6. Wait 2-3 minutes + Clear browser cache
+
+═══════════════════════════════════════════════════════════════════
+
+⚠️  MOST COMMON MISTAKE:
+Forgetting to add YOUR EMAIL as a test user in OAuth consent screen!
+
+═══════════════════════════════════════════════════════════════════
+
+AFTER COMPLETING ALL 6:
+→ Refresh SpendWise (Ctrl+Shift+R)
+→ Click "Connect Google Sheets"
+→ Should see Google authorization (not "refused to connect")
+
+═══════════════════════════════════════════════════════════════════
+
+DETAILED GUIDE: See FIX-REFUSED-TO-CONNECT.txt
+
+═══════════════════════════════════════════════════════════════════

@@ -1,0 +1,77 @@
+╔══════════════════════════════════════════════════════════════════╗
+║                                                                  ║
+║         🔧 FINAL FIX: Update Google Redirect URI (1 min)         ║
+║                                                                  ║
+╚══════════════════════════════════════════════════════════════════╝
+
+I FOUND THE BUG! The redirect URI in the code was wrong.
+
+✅ I've fixed the code
+❌ But you need to update Google Cloud Console with the NEW redirect URI
+
+═══════════════════════════════════════════════════════════════════
+
+QUICK UPDATE (1 minute):
+═══════════════════════════════════════════════════════════════════
+
+1. Go to Google Cloud Console Credentials:
+   https://console.cloud.google.com/apis/credentials
+
+2. Find your OAuth client:
+   674900603085-4gmc4j4gd09utu3cit0vka0rpt4rri7j
+
+3. Click EDIT (pencil icon)
+
+4. In "Authorized redirect URIs":
+   
+   ❌ REMOVE this if you added it:
+   https://spendwise-646.preview.emergentagent.com/api/auth/google/callback
+   
+   ✅ ADD this (the correct one):
+   https://spendwise-646.preview.emergentagent.com/auth/google/callback
+   
+   Notice: NO "/api" in the path!
+
+5. Click SAVE
+
+6. Wait 1-2 minutes
+
+7. Test connection!
+
+═══════════════════════════════════════════════════════════════════
+
+WHAT WAS WRONG:
+═══════════════════════════════════════════════════════════════════
+
+The OAuth redirect URI in the code was pointing to:
+  /api/auth/google/callback  ❌ (wrong)
+
+But the actual callback page is at:
+  /auth/google/callback  ✅ (correct)
+
+This mismatch caused the 403 error.
+
+═══════════════════════════════════════════════════════════════════
+
+AFTER UPDATE:
+═══════════════════════════════════════════════════════════════════
+
+1. Refresh SpendWise (Ctrl+Shift+R)
+2. Click "Connect Google Sheets"
+3. You should see Google's authorization page (NOT 403!)
+4. Click "Allow"
+5. Get redirected back to SpendWise
+6. See "Google Sheets Connected ✅"
+
+═══════════════════════════════════════════════════════════════════
+
+COPY-PASTE READY:
+═══════════════════════════════════════════════════════════════════
+
+Correct Redirect URI:
+https://spendwise-646.preview.emergentagent.com/auth/google/callback
+
+Google Cloud Console:
+https://console.cloud.google.com/apis/credentials
+
+═══════════════════════════════════════════════════════════════════

@@ -1,0 +1,105 @@
+╔══════════════════════════════════════════════════════════════════╗
+║                                                                  ║
+║         🚀 QUICK START - Database Setup (2 Minutes)              ║
+║                                                                  ║
+╚══════════════════════════════════════════════════════════════════╝
+
+Your SpendWise app is live and working! 
+You just need to create the database tables in Supabase.
+
+═══════════════════════════════════════════════════════════════════
+
+STEP-BY-STEP INSTRUCTIONS:
+
+1. Open Supabase Dashboard
+   → Go to: https://supabase.com/dashboard
+   → Login if needed
+
+2. Select Your Project
+   → Click on: "patlahankyhajvonugws"
+   
+3. Open SQL Editor
+   → Click "SQL Editor" in the left sidebar
+   → Click "New Query"
+
+4. Copy the SQL Script
+   → Open the file: /app/supabase-setup.sql
+   → Select ALL the content (Ctrl+A or Cmd+A)
+   → Copy it (Ctrl+C or Cmd+C)
+
+5. Paste & Run
+   → Paste the SQL into the Supabase SQL Editor
+   → Click the "RUN" button (or press Ctrl+Enter)
+   → Wait 2-3 seconds for completion
+
+6. Verify Success
+   → Click "Table Editor" in left sidebar
+   → You should see 3 new tables:
+     ✓ users
+     ✓ expenses
+     ✓ user_preferences
+
+═══════════════════════════════════════════════════════════════════
+
+WHAT THIS CREATES:
+
+✓ Database tables for users, expenses, and preferences
+✓ Security policies (Row Level Security)
+✓ Performance indexes
+✓ A demo user account
+✓ 5 sample expenses to get you started
+
+═══════════════════════════════════════════════════════════════════
+
+AFTER SETUP - TEST THE APP:
+
+1. Refresh your app: https://spendwise-646.preview.emergentagent.com
+
+2. You should see 5 sample expenses appear!
+
+3. Try adding a new expense:
+   → Type: "coffee 80"
+   → Press Enter
+   → Watch the AI parse it instantly! ✨
+
+4. Try other examples:
+   → "lunch at swiggy 250"
+   → "uber to mall 180"
+   → "movie tickets 600"
+
+5. Click the Quick Add buttons:
+   → Coffee ₹80
+   → Lunch ₹200
+   → Auto ₹50
+   → Tea ₹20
+
+═══════════════════════════════════════════════════════════════════
+
+TROUBLESHOOTING:
+
+❌ SQL fails to run:
+   → Make sure you copied the ENTIRE SQL file
+   → Check for any copy-paste errors
+   
+❌ Tables don't appear:
+   → Refresh the Supabase Table Editor page
+   → Check the SQL output for any error messages
+
+❌ App still shows "No expenses":
+   → Hard refresh the app (Ctrl+Shift+R or Cmd+Shift+R)
+   → Check browser console for errors (F12)
+
+═══════════════════════════════════════════════════════════════════
+
+NEED HELP?
+
+If you encounter any issues:
+1. Check the README.md file for detailed documentation
+2. Look at the browser console (F12) for error messages
+3. Verify your Supabase credentials in the .env file
+
+═══════════════════════════════════════════════════════════════════
+
+🎉 Once complete, you'll have a fully working AI expense tracker!
+
+═══════════════════════════════════════════════════════════════════

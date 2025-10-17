@@ -1,0 +1,169 @@
+╔══════════════════════════════════════════════════════════════════╗
+║                                                                  ║
+║     🔧 FIX GOOGLE SHEETS 403 ERROR (5 Minutes Setup)             ║
+║                                                                  ║
+╚══════════════════════════════════════════════════════════════════╝
+
+The "403 - You do not have access to this page" error means your 
+Google Cloud Console OAuth is not configured correctly.
+
+═══════════════════════════════════════════════════════════════════
+
+STEP-BY-STEP FIX:
+═══════════════════════════════════════════════════════════════════
+
+STEP 1: Go to Google Cloud Console
+───────────────────────────────────────────────────────────────────
+URL: https://console.cloud.google.com/
+
+Log in with the Google account you want to use
+
+
+STEP 2: Enable Required APIs
+───────────────────────────────────────────────────────────────────
+1. Go to: APIs & Services → Library
+2. Search for "Google Sheets API" → Click it → Click "ENABLE"
+3. Search for "Google Drive API" → Click it → Click "ENABLE"
+
+(Wait 1-2 minutes after enabling)
+
+
+STEP 3: Configure OAuth Consent Screen
+───────────────────────────────────────────────────────────────────
+1. Go to: APIs & Services → OAuth consent screen
+
+2. If asked, select "External" user type → Click CREATE
+
+3. Fill in required fields:
+   - App name: "SpendWise Expense Tracker"
+   - User support email: your-email@gmail.com
+   - Developer contact: your-email@gmail.com
+
+4. Click "SAVE AND CONTINUE"
+
+5. On "Scopes" page:
+   - Click "ADD OR REMOVE SCOPES"
+   - Search and add these scopes:
+     ✓ .../auth/spreadsheets
+     ✓ .../auth/drive.file
+   - Click "UPDATE" → Click "SAVE AND CONTINUE"
+
+6. On "Test users" page:
+   - Click "ADD USERS"
+   - Add YOUR email address (the one you'll use to connect)
+   - Click "ADD" → Click "SAVE AND CONTINUE"
+
+7. Click "BACK TO DASHBOARD"
+
+
+STEP 4: Configure OAuth Credentials
+───────────────────────────────────────────────────────────────────
+1. Go to: APIs & Services → Credentials
+
+2. Find your OAuth 2.0 Client:
+   Client ID: 674900603085-4gmc4j4gd09utu3cit0vka0rpt4rri7j
+
+3. Click the EDIT icon (pencil) next to it
+
+4. Under "Authorized JavaScript origins", add:
+   https://spendwise-646.preview.emergentagent.com
+
+5. Under "Authorized redirect URIs", add this EXACT URL:
+   https://spendwise-646.preview.emergentagent.com/auth/google/callback
+
+6. Click "SAVE"
+
+7. Wait 1-2 minutes for changes to propagate
+
+
+STEP 5: Test the Connection
+───────────────────────────────────────────────────────────────────
+1. Go back to your SpendWise app
+2. Refresh the page (Ctrl+Shift+R)
+3. Click "Connect Google Sheets"
+4. You should now see Google's authorization screen (not 403 error!)
+5. Click "Allow" to authorize
+6. You'll be redirected back to SpendWise
+7. Should see "Google Sheets Connected ✅"
+
+═══════════════════════════════════════════════════════════════════
+
+TROUBLESHOOTING:
+═══════════════════════════════════════════════════════════════════
+
+Still getting 403?
+→ Make sure the redirect URI is EXACTLY:
+  https://spendwise-646.preview.emergentagent.com/auth/google/callback
+  (No trailing slash, must be https://)
+
+Still not working?
+→ Check that you're using the SAME Google account for:
+  1. Google Cloud Console setup
+  2. OAuth consent screen test users
+  3. Trying to connect in the app
+
+"This app isn't verified" warning?
+→ This is normal for test apps
+→ Click "Advanced" → "Go to SpendWise (unsafe)"
+→ This is safe since you're the developer
+
+═══════════════════════════════════════════════════════════════════
+
+VISUAL CHECKLIST:
+═══════════════════════════════════════════════════════════════════
+
+In Google Cloud Console, you should have:
+
+✓ Google Sheets API: ENABLED
+✓ Google Drive API: ENABLED
+✓ OAuth Consent Screen: Configured with External type
+✓ Test Users: Your email added
+✓ Scopes: spreadsheets and drive.file added
+✓ Credentials: Redirect URI added exactly as shown
+
+═══════════════════════════════════════════════════════════════════
+
+URLS TO COPY-PASTE:
+═══════════════════════════════════════════════════════════════════
+
+Google Cloud Console:
+https://console.cloud.google.com/
+
+Enable APIs:
+https://console.cloud.google.com/apis/library
+
+OAuth Consent Screen:
+https://console.cloud.google.com/apis/credentials/consent
+
+Credentials:
+https://console.cloud.google.com/apis/credentials
+
+Redirect URI to add:
+https://spendwise-646.preview.emergentagent.com/auth/google/callback
+
+═══════════════════════════════════════════════════════════════════
+
+WHY THIS ERROR HAPPENS:
+═══════════════════════════════════════════════════════════════════
+
+The 403 error means Google doesn't recognize your app or redirect URL.
+This happens when:
+- APIs not enabled
+- OAuth consent screen not configured
+- Redirect URI not added to allowed list
+- Test user not added (for External apps)
+
+After following the steps above, Google will recognize your app and
+allow the OAuth flow to complete successfully.
+
+═══════════════════════════════════════════════════════════════════
+
+TIME ESTIMATE:
+- API enabling: 1 minute
+- OAuth consent: 2 minutes
+- Credentials setup: 1 minute
+- Testing: 1 minute
+───────────────────
+TOTAL: ~5 minutes
+
+═══════════════════════════════════════════════════════════════════

@@ -1,0 +1,50 @@
+═══════════════════════════════════════════════════════════════════
+     QUICK FIX: Google Sheets 403 Error (Copy-Paste Ready)
+═══════════════════════════════════════════════════════════════════
+
+🔧 THE PROBLEM:
+You're seeing "403 - You do not have access to this page" when 
+connecting Google Sheets.
+
+🎯 THE FIX (5 steps):
+
+1️⃣ GO TO GOOGLE CLOUD CONSOLE
+   https://console.cloud.google.com/
+
+2️⃣ ENABLE APIS (APIs & Services → Library)
+   ✓ Enable "Google Sheets API"
+   ✓ Enable "Google Drive API"
+
+3️⃣ SETUP OAUTH CONSENT (APIs & Services → OAuth consent screen)
+   ✓ Choose "External"
+   ✓ App name: "SpendWise"
+   ✓ Add scopes: spreadsheets, drive.file
+   ✓ Add YOUR email as test user
+
+4️⃣ ADD REDIRECT URI (APIs & Services → Credentials)
+   ✓ Find client: 674900603085-4gmc4j4gd09utu3cit0vka0rpt4rri7j
+   ✓ Click Edit
+   ✓ Add this EXACT URL to "Authorized redirect URIs":
+
+   https://spendwise-646.preview.emergentagent.com/auth/google/callback
+
+   ✓ Save
+
+5️⃣ TEST
+   ✓ Wait 1-2 minutes
+   ✓ Refresh your SpendWise app
+   ✓ Click "Connect Google Sheets"
+   ✓ Should work now! ✅
+
+═══════════════════════════════════════════════════════════════════
+
+⚠️ IMPORTANT:
+- The redirect URI must be EXACTLY as shown (no trailing slash)
+- Add YOUR email as test user in OAuth consent screen
+- Wait 1-2 minutes after making changes
+
+═══════════════════════════════════════════════════════════════════
+
+📖 DETAILED GUIDE: See FIX-GOOGLE-403-ERROR.txt
+
+═══════════════════════════════════════════════════════════════════
