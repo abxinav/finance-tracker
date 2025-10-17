@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -11,33 +11,12 @@ import GoogleSheetsIntegration from '@/components/GoogleSheetsIntegration';
 import { supabase } from '@/lib/supabase';
 import { v4 as uuidv4 } from 'uuid';
 import {
-  Coffee,
-  UtensilsCrossed,
-  Car,
-  Smartphone,
   Trash2,
   Loader2,
   TrendingUp,
   TrendingDown,
-  CheckCircle2,
   AlertCircle,
 } from 'lucide-react';
-
-const PLACEHOLDERS = [
-  'Try: coffee 80',
-  'Try: uber to office 150',
-  'Try: movie tickets 600',
-  'Try: groceries 1200',
-  'Try: lunch 250',
-  'Try: auto 50',
-];
-
-const QUICK_BUTTONS = [
-  { label: 'Coffee', amount: 80, category: 'Food', icon: Coffee },
-  { label: 'Lunch', amount: 200, category: 'Food', icon: UtensilsCrossed },
-  { label: 'Auto', amount: 50, category: 'Transport', icon: Car },
-  { label: 'Tea', amount: 20, category: 'Food', icon: Coffee },
-];
 
 const CATEGORY_COLORS = {
   Food: 'bg-orange-500',
@@ -60,33 +39,16 @@ const CATEGORY_ICONS = {
 };
 
 export default function ExpenseTracker() {
-  const [expenseText, setExpenseText] = useState('');
   const [expenses, setExpenses] = useState([]);
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(false);
   const [isInitialLoading, setIsInitialLoading] = useState(true);
-  const [showSuccess, setShowSuccess] = useState(false);
-  const [placeholderIndex, setPlaceholderIndex] = useState(0);
-  const inputRef = useRef(null);
   const { toast } = useToast();
 
   // Manual form state
   const [manualName, setManualName] = useState('');
   const [manualAmount, setManualAmount] = useState('');
   const [manualCategory, setManualCategory] = useState('Other');
-
-  // Rotate placeholder every 3 seconds
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setPlaceholderIndex((prev) => (prev + 1) % PLACEHOLDERS.length);
-    }, 3000);
-    return () => clearInterval(interval);
-  }, []);
-
-  // Auto-focus input on load
-  useEffect(() => {
-    inputRef.current?.focus();
-  }, []);
 
   // Fetch expenses and stats
   useEffect(() => {
@@ -125,113 +87,6 @@ export default function ExpenseTracker() {
     } catch (error) {
       console.error('Failed to fetch stats:', error);
       setStats(null);
-    }
-  };
-
-  const handleAddExpense = async (text) => {
-    if (!text.trim()) return;
-
-    setLoading(true);
-    try {
-      // Step 1: Parse the expense using AI
-      const parseResponse = await fetch('/api/expenses/parse', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ text }),
-      });
-
-      if (!parseResponse.ok) {
-        const errorData = await parseResponse.json();
-        throw new Error(errorData.error || 'Failed to parse expense');
-      }
-
-      const parsed = await parseResponse.json();
-
-      // Step 2: Save the expense
-      const saveResponse = await fetch('/api/expenses', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(parsed),
-      });
-
-      if (!saveResponse.ok) {
-        throw new Error('Failed to save expense');
-      }
-
-      const { expense } = await saveResponse.json();
-
-      // Success! Update UI
-      setExpenses([expense, ...expenses]);
-      setExpenseText('');
-      setShowSuccess(true);
-      setTimeout(() => setShowSuccess(false), 2000);
-
-      // Refresh stats
-      fetchStats();
-
-      toast({
-        title: 'Expense added!',
-        description: `₹${expense.amount} for ${expense.description}`,
-      });
-    } catch (error) {
-      console.error('Error adding expense:', error);
-      toast({
-        title: 'Error',
-        description: error.message || 'Failed to add expense',
-        variant: 'destructive',
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleQuickAdd = async (label, amount, category) => {
-    setLoading(true);
-    try {
-      // Hardcoded user ID for demo/MVP mode
-      const MOCK_USER_ID = '00000000-0000-0000-0000-000000000001';
-
-      const newExpense = {
-        id: uuidv4(),
-        user_id: MOCK_USER_ID,
-        amount: amount,
-        category: category,
-        description: label,
-        date: new Date().toISOString().split('T')[0],
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-      };
-
-      // Direct insert to Supabase
-      const { data, error } = await supabase
-        .from('expenses')
-        .insert([newExpense])
-        .select()
-        .single();
-
-      if (error) throw error;
-
-      // Success! Update UI
-      setExpenses([data, ...expenses]);
-      setShowSuccess(true);
-      setTimeout(() => setShowSuccess(false), 2000);
-
-      // Refresh stats
-      fetchStats();
-
-      toast({
-        title: 'Expense added!',
-        description: `₹${data.amount} for ${data.description}`,
-      });
-    } catch (error) {
-      console.error('Error adding expense:', error);
-      toast({
-        title: 'Error',
-        description: error.message || 'Failed to add expense',
-        variant: 'destructive',
-      });
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -373,60 +228,10 @@ export default function ExpenseTracker() {
 
       {/* Main Content */}
       <main className="container mx-auto px-4 py-6 max-w-4xl">
-        {/* Expense Input Section */}
+        {/* Expense Input Form */}
         <Card className="mb-6 border-2 border-blue-200 shadow-lg" data-testid="expense-input-card">
-          <CardContent className="pt-6">
-            <div className="relative">
-              <Input
-                ref={inputRef}
-                type="text"
-                placeholder={PLACEHOLDERS[placeholderIndex]}
-                value={expenseText}
-                onChange={(e) => setExpenseText(e.target.value)}
-                onKeyPress={(e) => {
-                  if (e.key === 'Enter' && !loading) {
-                    handleAddExpense(expenseText);
-                  }
-                }}
-                className="text-lg h-14 pr-12"
-                disabled={loading}
-                data-testid="expense-input"
-              />
-              {loading && (
-                <Loader2 className="absolute right-4 top-4 h-6 w-6 animate-spin text-blue-500" />
-              )}
-              {showSuccess && (
-                <CheckCircle2 className="absolute right-4 top-4 h-6 w-6 text-green-500" data-testid="success-icon" />
-              )}
-            </div>
-
-            {/* Quick Add Buttons */}
-            <div className="flex gap-2 mt-4 flex-wrap">
-              {QUICK_BUTTONS.map((btn) => {
-                const Icon = btn.icon;
-                return (
-                  <Button
-                    key={btn.label}
-                    variant="outline"
-                    size="sm"
-                    onClick={() => handleQuickAdd(btn.label, btn.amount, btn.category)}
-                    disabled={loading}
-                    className="flex-1 min-w-[100px]"
-                    data-testid={`quick-add-${btn.label.toLowerCase()}`}
-                  >
-                    <Icon className="h-4 w-4 mr-1" />
-                    {btn.label} ₹{btn.amount}
-                  </Button>
-                );
-              })}
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Manual Entry Form */}
-        <Card className="mb-6 border-2 border-green-200 shadow-lg">
           <CardHeader>
-            <CardTitle className="text-lg">Manual Entry</CardTitle>
+            <CardTitle className="text-lg">Add Expense</CardTitle>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleManualAdd} className="space-y-4">
