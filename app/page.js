@@ -8,6 +8,8 @@ import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { useToast } from '@/components/ui/use-toast';
 import GoogleSheetsIntegration from '@/components/GoogleSheetsIntegration';
+import { supabase } from '@/lib/supabase';
+import { v4 as uuidv4 } from 'uuid';
 import {
   Coffee,
   UtensilsCrossed,
@@ -31,10 +33,10 @@ const PLACEHOLDERS = [
 ];
 
 const QUICK_BUTTONS = [
-  { label: 'Coffee', amount: 80, icon: Coffee },
-  { label: 'Lunch', amount: 200, icon: UtensilsCrossed },
-  { label: 'Auto', amount: 50, icon: Car },
-  { label: 'Tea', amount: 20, icon: Coffee },
+  { label: 'Coffee', amount: 80, category: 'Food', icon: Coffee },
+  { label: 'Lunch', amount: 200, category: 'Food', icon: UtensilsCrossed },
+  { label: 'Auto', amount: 50, category: 'Transport', icon: Car },
+  { label: 'Tea', amount: 20, category: 'Food', icon: Coffee },
 ];
 
 const CATEGORY_COLORS = {
@@ -62,10 +64,16 @@ export default function ExpenseTracker() {
   const [expenses, setExpenses] = useState([]);
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [isInitialLoading, setIsInitialLoading] = useState(true);
   const [showSuccess, setShowSuccess] = useState(false);
   const [placeholderIndex, setPlaceholderIndex] = useState(0);
   const inputRef = useRef(null);
   const { toast } = useToast();
+
+  // Manual form state
+  const [manualName, setManualName] = useState('');
+  const [manualAmount, setManualAmount] = useState('');
+  const [manualCategory, setManualCategory] = useState('Other');
 
   // Rotate placeholder every 3 seconds
   useEffect(() => {
@@ -82,8 +90,12 @@ export default function ExpenseTracker() {
 
   // Fetch expenses and stats
   useEffect(() => {
-    fetchExpenses();
-    fetchStats();
+    const loadInitialData = async () => {
+      setIsInitialLoading(true);
+      await Promise.all([fetchExpenses(), fetchStats()]);
+      setIsInitialLoading(false);
+    };
+    loadInitialData();
   }, []);
 
   const fetchExpenses = async () => {
@@ -173,8 +185,108 @@ export default function ExpenseTracker() {
     }
   };
 
-  const handleQuickAdd = async (label, amount) => {
-    await handleAddExpense(`${label} ${amount}`);
+  const handleQuickAdd = async (label, amount, category) => {
+    setLoading(true);
+    try {
+      // Hardcoded user ID for demo/MVP mode
+      const MOCK_USER_ID = '00000000-0000-0000-0000-000000000001';
+
+      const newExpense = {
+        id: uuidv4(),
+        user_id: MOCK_USER_ID,
+        amount: amount,
+        category: category,
+        description: label,
+        date: new Date().toISOString().split('T')[0],
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      };
+
+      // Direct insert to Supabase
+      const { data, error } = await supabase
+        .from('expenses')
+        .insert([newExpense])
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      // Success! Update UI
+      setExpenses([data, ...expenses]);
+      setShowSuccess(true);
+      setTimeout(() => setShowSuccess(false), 2000);
+
+      // Refresh stats
+      fetchStats();
+
+      toast({
+        title: 'Expense added!',
+        description: `₹${data.amount} for ${data.description}`,
+      });
+    } catch (error) {
+      console.error('Error adding expense:', error);
+      toast({
+        title: 'Error',
+        description: error.message || 'Failed to add expense',
+        variant: 'destructive',
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleManualAdd = async (e) => {
+    e.preventDefault();
+    if (!manualName.trim() || !manualAmount) return;
+
+    setLoading(true);
+    try {
+      const MOCK_USER_ID = '00000000-0000-0000-0000-000000000001';
+
+      const newExpense = {
+        id: uuidv4(),
+        user_id: MOCK_USER_ID,
+        amount: parseInt(manualAmount),
+        category: manualCategory,
+        description: manualName,
+        date: new Date().toISOString().split('T')[0],
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      };
+
+      const { data, error } = await supabase
+        .from('expenses')
+        .insert([newExpense])
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      // Success! Update UI
+      setExpenses([data, ...expenses]);
+      setManualName('');
+      setManualAmount('');
+      setManualCategory('Other');
+      setShowSuccess(true);
+      setTimeout(() => setShowSuccess(false), 2000);
+
+      // Refresh stats
+      fetchStats();
+
+      toast({
+        title: 'Expense added!',
+        description: `₹${data.amount} for ${data.description}`,
+      });
+    } catch (error) {
+      console.error('Error adding expense:', error);
+      toast({
+        title: 'Error',
+        description: error.message || 'Failed to add expense',
+        variant: 'destructive',
+      });
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleDelete = async (expenseId) => {
@@ -297,7 +409,7 @@ export default function ExpenseTracker() {
                     key={btn.label}
                     variant="outline"
                     size="sm"
-                    onClick={() => handleQuickAdd(btn.label, btn.amount)}
+                    onClick={() => handleQuickAdd(btn.label, btn.amount, btn.category)}
                     disabled={loading}
                     className="flex-1 min-w-[100px]"
                     data-testid={`quick-add-${btn.label.toLowerCase()}`}
@@ -308,6 +420,66 @@ export default function ExpenseTracker() {
                 );
               })}
             </div>
+          </CardContent>
+        </Card>
+
+        {/* Manual Entry Form */}
+        <Card className="mb-6 border-2 border-green-200 shadow-lg">
+          <CardHeader>
+            <CardTitle className="text-lg">Manual Entry</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <form onSubmit={handleManualAdd} className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="md:col-span-1">
+                  <Input
+                    type="text"
+                    placeholder="Expense name (e.g., Gym)"
+                    value={manualName}
+                    onChange={(e) => setManualName(e.target.value)}
+                    disabled={loading}
+                    className="h-12"
+                    data-testid="manual-name-input"
+                  />
+                </div>
+                <div className="md:col-span-1">
+                  <Input
+                    type="number"
+                    placeholder="Amount (₹)"
+                    value={manualAmount}
+                    onChange={(e) => setManualAmount(e.target.value)}
+                    disabled={loading}
+                    className="h-12"
+                    data-testid="manual-amount-input"
+                  />
+                </div>
+                <div className="md:col-span-1">
+                  <select
+                    value={manualCategory}
+                    onChange={(e) => setManualCategory(e.target.value)}
+                    disabled={loading}
+                    className="w-full h-12 px-3 rounded-md border border-gray-300 bg-white text-gray-900"
+                    data-testid="manual-category-select"
+                  >
+                    <option value="Food">🍔 Food</option>
+                    <option value="Transport">🚗 Transport</option>
+                    <option value="Entertainment">🎬 Entertainment</option>
+                    <option value="Shopping">🛍️ Shopping</option>
+                    <option value="Bills">💡 Bills</option>
+                    <option value="Health">⚕️ Health</option>
+                    <option value="Other">📌 Other</option>
+                  </select>
+                </div>
+              </div>
+              <Button
+                type="submit"
+                disabled={loading || !manualName.trim() || !manualAmount}
+                className="w-full h-12"
+                data-testid="manual-submit-button"
+              >
+                {loading ? <Loader2 className="h-5 w-5 animate-spin" /> : 'Add Expense'}
+              </Button>
+            </form>
           </CardContent>
         </Card>
 
@@ -360,7 +532,12 @@ export default function ExpenseTracker() {
             <CardTitle>Recent Expenses</CardTitle>
           </CardHeader>
           <CardContent>
-            {expenses.length === 0 ? (
+            {isInitialLoading ? (
+              <div className="text-center py-12" data-testid="loading-state">
+                <Loader2 className="h-12 w-12 text-blue-500 mx-auto mb-4 animate-spin" />
+                <p className="text-gray-600">Loading expenses...</p>
+              </div>
+            ) : expenses.length === 0 ? (
               <div className="text-center py-12" data-testid="empty-state">
                 <AlertCircle className="h-12 w-12 text-gray-400 mx-auto mb-4" />
                 <p className="text-gray-600">No expenses yet!</p>
